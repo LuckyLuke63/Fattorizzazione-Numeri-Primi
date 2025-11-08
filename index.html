@@ -295,6 +295,9 @@
                     if (attempts <= 30) {
                         stepsHTML += `<div class="step">Tentativo ${attempts}: ${number} ÷ ${upper} (↑) → non divisibile</div>`;
                     }
+                    else if (attempts === 31) {
+                    stepsHTML += `<div class="step">... continuando la ricerca bidirezionale ...</div>`;
+                    }
                     upper++;
                 }
             }
