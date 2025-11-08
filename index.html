@@ -253,36 +253,21 @@
             let factor1, factor2;
 
             stepsHTML += `<div class="step">Radice quadrata: √${number} ≈ ${sqrt.toFixed(2)}</div>`;
-            stepsHTML += `<div class="step">Inizio ricerca da ${sqrtInt} verso l'esterno...</div>`;
+            stepsHTML += `<div class="step">Inizio ricerca da ${sqrtInt} verso il basso...</div>`;
 
-            for (let offset = 0; offset <= sqrtInt; offset++) {
-                const lower = sqrtInt - offset;
-                const upper = sqrtInt + offset + 1;
-
-                // Prova con lower
-                if (lower > 1) {
-                    attempts++;
-                    if (number % lower === 0) {
-                        factor1 = lower;
-                        factor2 = number / lower;
-                        stepsHTML += `<div class="step success">✓ Trovato! ${lower} × ${factor2} = ${number}</div>`;
-                        found = true;
-                        break;
-                    }
-                    stepsHTML += `<div class="step">Tentativo ${attempts}: ${lower} × ${Math.ceil(number/lower)} = ${lower * Math.ceil(number/lower)} ✗</div>`;
+            // Partiamo da sqrtInt e scendiamo fino a 2
+            for (let i = sqrtInt; i >= 2; i--) {
+                attempts++;
+                if (number % i === 0) {
+                    factor1 = i;
+                    factor2 = number / i;
+                    stepsHTML += `<div class="step success">✓ Trovato! ${factor1} × ${factor2} = ${number}</div>`;
+                    found = true;
+                    break;
                 }
-
-                // Prova con upper
-                if (upper <= number / 2) {
-                    attempts++;
-                    if (number % upper === 0) {
-                        factor1 = upper;
-                        factor2 = number / upper;
-                        stepsHTML += `<div class="step success">✓ Trovato! ${upper} × ${factor2} = ${number}</div>`;
-                        found = true;
-                        break;
-                    }
-                    stepsHTML += `<div class="step">Tentativo ${attempts}: ${upper} × ${Math.floor(number/upper)} = ${upper * Math.floor(number/upper)} ✗</div>`;
+                // Mostra solo alcuni tentativi per non riempire troppo lo schermo
+                if (attempts <= 20 || (attempts % 10 === 0)) {
+                    stepsHTML += `<div class="step">Tentativo ${attempts}: ${i} non divide ${number}</div>`;
                 }
             }
 
