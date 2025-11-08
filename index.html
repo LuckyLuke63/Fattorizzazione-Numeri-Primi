@@ -185,7 +185,7 @@
 
         <div class="input-group">
             <label for="number">Inserisci un numero (prodotto di due primi):</label>
-            <input type="number" id="number" placeholder="Es: 143, 323, 1517..." min="4">
+            <input type="text" id="number" placeholder="Es: 143, 323, 1.517..." inputmode="numeric">
         </div>
 
         <button onclick="factorize()">Fattorizza</button>
@@ -199,21 +199,24 @@
     <script>
         function isPrime(n) {
             if (n <= 1) return false;
-            if (n <= 3) return true;
-            if (n % 2 === 0 || n % 3 === 0) return false;
+            if (n === 2) return true;
+            if (n % 2 === 0) return false;
             
-            for (let i = 5; i * i <= n; i += 6) {
-                if (n % i === 0 || n % (i + 2) === 0) return false;
+            for (let i = 3; i * i <= n; i += 2) {
+                if (n % i === 0) return false;
             }
             return true;
         }
 
         function factorize() {
-            const number = parseInt(document.getElementById('number').value);
+            const input = document.getElementById('number').value;
+            // Rimuovi punti e spazi (separatori migliaia)
+            const cleanInput = input.replace(/[.\s]/g, '');
+            const number = parseInt(cleanInput);
             const resultDiv = document.getElementById('result');
             const resultContent = document.getElementById('resultContent');
 
-            if (!number || number < 4) {
+            if (!number || isNaN(number) || number < 4) {
                 resultContent.innerHTML = '<div class="error">Inserisci un numero valido maggiore o uguale a 4</div>';
                 resultDiv.classList.remove('hidden');
                 return;
