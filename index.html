@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fattorizzazione Prodotti di Numeri Primi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .result-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .result-item strong {
+            color: #764ba2;
+        }
+
+        .steps {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .step {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .step.success {
+            background: #d4edda;
+            color: #155724;
+            font-weight: 600;
+        }
+
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #d32f2f;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Fattorizzazione Numeri Primi</h1>
+        <p class="subtitle">Trova i fattori primi di un numero composto</p>
+
+        <div class="input-group">
+            <label for="number">Inserisci un numero (prodotto di due primi):</label>
+            <input type="number" id="number" placeholder="Es: 143, 323, 1517..." min="4">
+        </div>
+
+        <button onclick="factorize()">Fattorizza</button>
+
+        <div id="result" class="result hidden">
+            <h2>📊 Risultato</h2>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function isPrime(n) {
+            if (n <= 1) return false;
+            if (n <= 3) return true;
+            if (n % 2 === 0 || n % 3 === 0) return false;
+            
+            for (let i = 5; i * i <= n; i += 6) {
+                if (n % i === 0 || n % (i + 2) === 0) return false;
+            }
+            return true;
+        }
+
+        function factorize() {
+            const number = parseInt(document.getElementById('number').value);
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+
+            if (!number || number < 4) {
+                resultContent.innerHTML = '<div class="error">Inserisci un numero valido maggiore o uguale a 4</div>';
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            const sqrt = Math.sqrt(number);
+            const sqrtInt = Math.floor(sqrt);
+
+            // Verifica se è un quadrato perfetto di un numero primo
+            if (sqrtInt * sqrtInt === number && isPrime(sqrtInt)) {
+                resultContent.innerHTML = `
+                    <div class="result-item">
+                        <strong>Numero:</strong> ${number} = ${sqrtInt}²
+                    </div>
+                    <div class="result-item">
+                        <strong>Fattori primi:</strong> ${sqrtInt} × ${sqrtInt}
+                    </div>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Tentativi</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">✓</div>
+                            <div class="stat-label">Quadrato perfetto</div>
+                        </div>
+                    </div>
+                `;
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            // Algoritmo di ricerca dalla radice quadrata
+            let stepsHTML = '<div class="steps">';
+            let attempts = 0;
+            let found = false;
+            let factor1, factor2;
+
+            stepsHTML += `<div class="step">Radice quadrata: √${number} ≈ ${sqrt.toFixed(2)}</div>`;
+            stepsHTML += `<div class="step">Inizio ricerca da ${sqrtInt} verso l'esterno...</div>`;
+
+            for (let offset = 0; offset <= sqrtInt; offset++) {
+                const lower = sqrtInt - offset;
+                const upper = sqrtInt + offset + 1;
+
+                // Prova con lower
+                if (lower > 1) {
+                    attempts++;
+                    if (number % lower === 0) {
+                        factor1 = lower;
+                        factor2 = number / lower;
+                        stepsHTML += `<div class="step success">✓ Trovato! ${lower} × ${factor2} = ${number}</div>`;
+                        found = true;
+                        break;
+                    }
+                    stepsHTML += `<div class="step">Tentativo ${attempts}: ${lower} × ${Math.ceil(number/lower)} = ${lower * Math.ceil(number/lower)} ✗</div>`;
+                }
+
+                // Prova con upper
+                if (upper <= number / 2) {
+                    attempts++;
+                    if (number % upper === 0) {
+                        factor1 = upper;
+                        factor2 = number / upper;
+                        stepsHTML += `<div class="step success">✓ Trovato! ${upper} × ${factor2} = ${number}</div>`;
+                        found = true;
+                        break;
+                    }
+                    stepsHTML += `<div class="step">Tentativo ${attempts}: ${upper} × ${Math.floor(number/upper)} = ${upper * Math.floor(number/upper)} ✗</div>`;
+                }
+            }
+
+            stepsHTML += '</div>';
+
+            if (found) {
+                const isPrime1 = isPrime(factor1);
+                const isPrime2 = isPrime(factor2);
+
+                resultContent.innerHTML = `
+                    <div class="result-item">
+                        <strong>Numero:</strong> ${number}
+                    </div>
+                    <div class="result-item">
+                        <strong>Fattori trovati:</strong> ${factor1} × ${factor2}
+                    </div>
+                    <div class="result-item">
+                        <strong>Verifica primi:</strong> ${factor1} ${isPrime1 ? '✓' : '✗'} primo, ${factor2} ${isPrime2 ? '✓' : '✗'} primo
+                    </div>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-value">${attempts}</div>
+                            <div class="stat-label">Tentativi</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${sqrt.toFixed(2)}</div>
+                            <div class="stat-label">Radice quadrata</div>
+                        </div>
+                    </div>
+                    ${stepsHTML}
+                `;
+            } else {
+                resultContent.innerHTML = '<div class="error">Non è stato possibile fattorizzare il numero con questo metodo</div>';
+            }
+
+            resultDiv.classList.remove('hidden');
+        }
+
+        // Gestisci Enter per fattorizzare
+        document.getElementById('number').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                factorize();
+            }
+        });
+    </script>
+</body>
+</html>
