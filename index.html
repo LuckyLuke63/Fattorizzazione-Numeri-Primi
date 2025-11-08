@@ -222,18 +222,22 @@
             const sqrt = Math.sqrt(number);
             const sqrtInt = Math.floor(sqrt);
 
-            // Verifica se è un quadrato perfetto di un numero primo
-            if (sqrtInt * sqrtInt === number && isPrime(sqrtInt)) {
+            // Verifica se è un quadrato perfetto
+            if (sqrtInt * sqrtInt === number) {
+                const isPrimeRoot = isPrime(sqrtInt);
                 resultContent.innerHTML = `
                     <div class="result-item">
                         <strong>Numero:</strong> ${number} = ${sqrtInt}²
                     </div>
                     <div class="result-item">
-                        <strong>Fattori primi:</strong> ${sqrtInt} × ${sqrtInt}
+                        <strong>Fattori trovati:</strong> ${sqrtInt} × ${sqrtInt}
+                    </div>
+                    <div class="result-item">
+                        <strong>Verifica primi:</strong> ${sqrtInt} ${isPrimeRoot ? '✓' : '✗'} primo
                     </div>
                     <div class="stats">
                         <div class="stat-box">
-                            <div class="stat-value">0</div>
+                            <div class="stat-value">1</div>
                             <div class="stat-label">Tentativi</div>
                         </div>
                         <div class="stat-box">
@@ -246,62 +250,85 @@
                 return;
             }
 
-            // Algoritmo di ricerca dalla radice quadrata
+            // Algoritmo di ricerca bidirezionale con divisioni
             let stepsHTML = '<div class="steps">';
             let attempts = 0;
-            let found = false;
-            let factor1, factor2;
+            let factor1 = 0;
+            let factor2 = 0;
 
             stepsHTML += `<div class="step">Radice quadrata: √${number} ≈ ${sqrt.toFixed(2)}</div>`;
-            stepsHTML += `<div class="step">Inizio ricerca da ${sqrtInt} verso il basso...</div>`;
+            stepsHTML += `<div class="step">Radice arrotondata: ${sqrtInt}</div>`;
+            stepsHTML += `<div class="step">Ricerca bidirezionale: scendendo da ${sqrtInt} e salendo da 2...</div>`;
 
-            // Partiamo da sqrtInt e scendiamo fino a 2
-            for (let i = sqrtInt; i >= 2; i--) {
+            // Ricerca bidirezionale con divisioni
+            let lower = sqrtInt; // Scende dalla radice
+            let upper = 2;        // Sale da 2
+            
+            while (lower >= upper) {
+                // Prova dividendo per lower (scende dalla radice)
                 attempts++;
-                if (number % i === 0) {
-                    factor1 = i;
-                    factor2 = number / i;
-                    stepsHTML += `<div class="step success">✓ Trovato! ${factor1} × ${factor2} = ${number}</div>`;
-                    found = true;
+                if (number % lower === 0) {
+                    factor1 = lower;
+                    factor2 = number / lower;
+                    stepsHTML += `<div class="step success">✓ Trovato al tentativo ${attempts}! ${number} ÷ ${lower} = ${factor2} → ${lower} × ${factor2} = ${number}</div>`;
                     break;
                 }
-                // Mostra solo alcuni tentativi per non riempire troppo lo schermo
-                if (attempts <= 20 || (attempts % 10 === 0)) {
-                    stepsHTML += `<div class="step">Tentativo ${attempts}: ${i} non divide ${number}</div>`;
+                if (attempts <= 30) {
+                    stepsHTML += `<div class="step">Tentativo ${attempts}: ${number} ÷ ${lower} (↓) → non divisibile</div>`;
+                } else if (attempts === 31) {
+                    stepsHTML += `<div class="step">... continuando la ricerca bidirezionale ...</div>`;
+                }
+                lower--;
+                
+                // Prova dividendo per upper (sale da 2)
+                if (upper < lower && factor1 === 0) {
+                    attempts++;
+                    if (number % upper === 0) {
+                        factor1 = upper;
+                        factor2 = number / upper;
+                        stepsHTML += `<div class="step success">✓ Trovato al tentativo ${attempts}! ${number} ÷ ${upper} = ${factor2} → ${upper} × ${factor2} = ${number}</div>`;
+                        break;
+                    }
+                    if (attempts <= 30) {
+                        stepsHTML += `<div class="step">Tentativo ${attempts}: ${number} ÷ ${upper} (↑) → non divisibile</div>`;
+                    }
+                    upper++;
                 }
             }
 
             stepsHTML += '</div>';
 
-            if (found) {
-                const isPrime1 = isPrime(factor1);
-                const isPrime2 = isPrime(factor2);
-
-                resultContent.innerHTML = `
-                    <div class="result-item">
-                        <strong>Numero:</strong> ${number}
-                    </div>
-                    <div class="result-item">
-                        <strong>Fattori trovati:</strong> ${factor1} × ${factor2}
-                    </div>
-                    <div class="result-item">
-                        <strong>Verifica primi:</strong> ${factor1} ${isPrime1 ? '✓' : '✗'} primo, ${factor2} ${isPrime2 ? '✓' : '✗'} primo
-                    </div>
-                    <div class="stats">
-                        <div class="stat-box">
-                            <div class="stat-value">${attempts}</div>
-                            <div class="stat-label">Tentativi</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value">${sqrt.toFixed(2)}</div>
-                            <div class="stat-label">Radice quadrata</div>
-                        </div>
-                    </div>
-                    ${stepsHTML}
-                `;
-            } else {
-                resultContent.innerHTML = '<div class="error">Non è stato possibile fattorizzare il numero con questo metodo</div>';
+            if (factor1 === 0) {
+                resultContent.innerHTML = `<div class="error">Errore: non è stato possibile trovare i fattori</div>${stepsHTML}`;
+                resultDiv.classList.remove('hidden');
+                return;
             }
+
+            const isPrime1 = isPrime(factor1);
+            const isPrime2 = isPrime(factor2);
+
+            resultContent.innerHTML = `
+                <div class="result-item">
+                    <strong>Numero:</strong> ${number}
+                </div>
+                <div class="result-item">
+                    <strong>Fattori trovati:</strong> ${factor1} × ${factor2}
+                </div>
+                <div class="result-item">
+                    <strong>Verifica primi:</strong> ${factor1} ${isPrime1 ? '✓' : '✗'} primo, ${factor2} ${isPrime2 ? '✓' : '✗'} primo
+                </div>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-value">${attempts}</div>
+                        <div class="stat-label">Tentativi</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${sqrt.toFixed(2)}</div>
+                        <div class="stat-label">Radice quadrata</div>
+                    </div>
+                </div>
+                ${stepsHTML}
+            `;
 
             resultDiv.classList.remove('hidden');
         }
