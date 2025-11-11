@@ -185,7 +185,7 @@
 
         <div class="input-group">
             <label for="number">Inserisci un numero (prodotto di due primi):</label>
-            <input type="text" id="number" placeholder="Es: 143, 323, 1.517..." inputmode="numeric">
+            <input type="text" id="number" placeholder="Es: 143, 323, 9563254123547173..." inputmode="numeric">
         </div>
 
         <button onclick="factorize()">Fattorizza</button>
@@ -198,12 +198,13 @@
 
     <script>
         function isPrime(n) {
-            if (n <= 1) return false;
-            if (n === 2) return true;
-            if (n % 2 === 0) return false;
+            n = BigInt(n);
+            if (n <= 1n) return false;
+            if (n === 2n) return true;
+            if (n % 2n === 0n) return false;
             
-            for (let i = 3; i * i <= n; i += 2) {
-                if (n % i === 0) return false;
+            for (let i = 3n; i * i <= n; i += 2n) {
+                if (n % i === 0n) return false;
             }
             return true;
         }
@@ -212,31 +213,55 @@
             const input = document.getElementById('number').value;
             // Rimuovi punti e spazi (separatori migliaia)
             const cleanInput = input.replace(/[.\s]/g, '');
-            const number = parseInt(cleanInput);
+            
+            let number;
+            try {
+                number = BigInt(cleanInput);
+            } catch (e) {
+                document.getElementById('resultContent').innerHTML = '<div class="error">Inserisci un numero valido</div>';
+                document.getElementById('result').classList.remove('hidden');
+                return;
+            }
+            
             const resultDiv = document.getElementById('result');
             const resultContent = document.getElementById('resultContent');
 
-            if (!number || isNaN(number) || number < 4) {
+            if (number < 4n) {
                 resultContent.innerHTML = '<div class="error">Inserisci un numero valido maggiore o uguale a 4</div>';
                 resultDiv.classList.remove('hidden');
                 return;
             }
 
-            const sqrt = Math.sqrt(number);
-            const sqrtInt = Math.floor(sqrt);
+            // Calcolo radice quadrata con BigInt
+            function sqrtBigInt(value) {
+                if (value < 0n) return 0n;
+                if (value < 2n) return value;
+                
+                let x0 = value / 2n;
+                let x1 = (x0 + value / x0) / 2n;
+                
+                while (x1 < x0) {
+                    x0 = x1;
+                    x1 = (x0 + value / x0) / 2n;
+                }
+                return x0;
+            }
+            
+            const sqrtInt = sqrtBigInt(number);
+            const sqrt = Math.sqrt(Number(number)); // Per visualizzazione approssimata
 
             // Verifica se è un quadrato perfetto
             if (sqrtInt * sqrtInt === number) {
                 const isPrimeRoot = isPrime(sqrtInt);
                 resultContent.innerHTML = `
                     <div class="result-item">
-                        <strong>Numero:</strong> ${number} = ${sqrtInt}²
+                        <strong>Numero:</strong> ${number.toLocaleString('it-IT')} = ${sqrtInt.toLocaleString('it-IT')}²
                     </div>
                     <div class="result-item">
-                        <strong>Fattori trovati:</strong> ${sqrtInt} × ${sqrtInt}
+                        <strong>Fattori trovati:</strong> ${sqrtInt.toLocaleString('it-IT')} × ${sqrtInt.toLocaleString('it-IT')}
                     </div>
                     <div class="result-item">
-                        <strong>Verifica primi:</strong> ${sqrtInt} ${isPrimeRoot ? '✓' : '✗ non'} primo
+                        <strong>Verifica primi:</strong> ${sqrtInt.toLocaleString('it-IT')} ${isPrimeRoot ? '✓' : '✗ non'} primo
                     </div>
                     <div class="stats">
                         <div class="stat-box">
@@ -256,44 +281,45 @@
             // Algoritmo di ricerca bidirezionale con divisioni
             let stepsHTML = '<div class="steps">';
             let attempts = 0;
-            let factor1 = 0;
-            let factor2 = 0;
+            let factor1 = 0n;
+            let factor2 = 0n;
 
-            stepsHTML += `<div class="step">Radice quadrata: √${number} ≈ ${sqrt.toFixed(2)}</div>`;
-            stepsHTML += `<div class="step">Radice arrotondata: ${sqrtInt}</div>`;
-            stepsHTML += `<div class="step">Ricerca bidirezionale: scendendo da ${sqrtInt} e salendo da 2...</div>`;
+            const sqrtDisplay = number > 9007199254740991n ? sqrtInt.toString() : sqrt.toFixed(2);
+            stepsHTML += `<div class="step">Radice quadrata: √${number.toLocaleString('it-IT')} ≈ ${sqrtDisplay}</div>`;
+            stepsHTML += `<div class="step">Radice arrotondata: ${sqrtInt.toLocaleString('it-IT')}</div>`;
+            stepsHTML += `<div class="step">Ricerca bidirezionale: scendendo da ${sqrtInt.toLocaleString('it-IT')} e salendo da 2...</div>`;
 
             // Ricerca bidirezionale con divisioni
             let lower = sqrtInt; // Scende dalla radice
-            let upper = 2;        // Sale da 2
+            let upper = 2n;        // Sale da 2
             
             while (lower >= upper) {
                 // Prova dividendo per lower (scende dalla radice)
                 attempts++;
-                if (number % lower === 0) {
+                if (number % lower === 0n) {
                     factor1 = lower;
                     factor2 = number / lower;
-                    stepsHTML += `<div class="step success">✓ Trovato al tentativo ${attempts}! ${number} ÷ ${lower} = ${factor2} → ${lower} × ${factor2} = ${number}</div>`;
+                    stepsHTML += `<div class="step success">✓ Trovato al tentativo ${attempts}! ${number.toLocaleString('it-IT')} ÷ ${lower.toLocaleString('it-IT')} = ${factor2.toLocaleString('it-IT')} → ${lower.toLocaleString('it-IT')} × ${factor2.toLocaleString('it-IT')} = ${number.toLocaleString('it-IT')}</div>`;
                     break;
                 }
                 if (attempts <= 30) {
-                    stepsHTML += `<div class="step">Tentativo ${attempts}: ${number} ÷ ${lower} (↓) → non divisibile</div>`;
+                    stepsHTML += `<div class="step">Tentativo ${attempts}: ${number.toLocaleString('it-IT')} ÷ ${lower.toLocaleString('it-IT')} (↓) → non divisibile</div>`;
                 } else if (attempts === 31) {
                     stepsHTML += `<div class="step">... continuando la ricerca bidirezionale ...</div>`;
                 }
                 lower--;
                 
                 // Prova dividendo per upper (sale da 2)
-                if (upper < lower && factor1 === 0) {
+                if (upper < lower && factor1 === 0n) {
                     attempts++;
-                    if (number % upper === 0) {
+                    if (number % upper === 0n) {
                         factor1 = upper;
                         factor2 = number / upper;
-                        stepsHTML += `<div class="step success">✓ Trovato al tentativo ${attempts}! ${number} ÷ ${upper} = ${factor2} → ${upper} × ${factor2} = ${number}</div>`;
+                        stepsHTML += `<div class="step success">✓ Trovato al tentativo ${attempts}! ${number.toLocaleString('it-IT')} ÷ ${upper.toLocaleString('it-IT')} = ${factor2.toLocaleString('it-IT')} → ${upper.toLocaleString('it-IT')} × ${factor2.toLocaleString('it-IT')} = ${number.toLocaleString('it-IT')}</div>`;
                         break;
                     }
                     if (attempts <= 30) {
-                        stepsHTML += `<div class="step">Tentativo ${attempts}: ${number} ÷ ${upper} (↑) → non divisibile</div>`;
+                        stepsHTML += `<div class="step">Tentativo ${attempts}: ${number.toLocaleString('it-IT')} ÷ ${upper.toLocaleString('it-IT')} (↑) → non divisibile</div>`;
                     }
                     else if (attempts === 31) {
                     stepsHTML += `<div class="step">... continuando la ricerca bidirezionale ...</div>`;
@@ -304,7 +330,7 @@
 
             stepsHTML += '</div>';
 
-            if (factor1 === 0) {
+            if (factor1 === 0n) {
                 resultContent.innerHTML = `<div class="error">Errore: non è stato possibile trovare i fattori</div>${stepsHTML}`;
                 resultDiv.classList.remove('hidden');
                 return;
@@ -312,16 +338,18 @@
 
             const isPrime1 = isPrime(factor1);
             const isPrime2 = isPrime(factor2);
+            
+            const sqrtDisplayFinal = number > 9007199254740991n ? sqrtInt.toString() : sqrt.toFixed(2);
 
             resultContent.innerHTML = `
                 <div class="result-item">
-                    <strong>Numero:</strong> ${number}
+                    <strong>Numero:</strong> ${number.toLocaleString('it-IT')}
                 </div>
                 <div class="result-item">
-                    <strong>Fattori trovati:</strong> ${factor1} × ${factor2}
+                    <strong>Fattori trovati:</strong> ${factor1.toLocaleString('it-IT')} × ${factor2.toLocaleString('it-IT')}
                 </div>
                 <div class="result-item">
-                    <strong>Verifica primi:</strong> ${factor1} ${isPrime1 ? '✓' : '✗ non'} primo, ${factor2} ${isPrime2 ? '✓' : '✗ non'} primo
+                    <strong>Verifica primi:</strong> ${factor1.toLocaleString('it-IT')} ${isPrime1 ? '✓' : '✗ non'} primo, ${factor2.toLocaleString('it-IT')} ${isPrime2 ? '✓' : '✗ non'} primo
                 </div>
                 <div class="stats">
                     <div class="stat-box">
@@ -329,7 +357,7 @@
                         <div class="stat-label">Tentativi</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-value">${sqrt.toFixed(2)}</div>
+                        <div class="stat-value">${sqrtDisplayFinal}</div>
                         <div class="stat-label">Radice quadrata</div>
                     </div>
                 </div>
