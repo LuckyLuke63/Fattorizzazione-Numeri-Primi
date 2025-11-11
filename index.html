@@ -331,7 +331,60 @@
             stepsHTML += '</div>';
 
             if (factor1 === 0n) {
-                resultContent.innerHTML = `<div class="error">Errore: non è stato possibile trovare i fattori</div>${stepsHTML}`;
+                // Nessun divisore trovato - verifica se è primo
+                stepsHTML += `<div class="step">Nessun divisore trovato. Verifica primalità in corso...</div>`;
+                
+                // Controlla se il numero è troppo grande per verificare efficacemente
+                const isPrimeCheck = number < 10000000000000n; // Limite pratico per test primalità
+                
+                if (isPrimeCheck) {
+                    const numberIsPrime = isPrime(number);
+                    if (numberIsPrime) {
+                        stepsHTML += `<div class="step success">✓ Il numero ${number.toLocaleString('it-IT')} è primo!</div>`;
+                        resultContent.innerHTML = `
+                            <div class="result-item" style="background: #d4edda; color: #155724;">
+                                <strong>Numero:</strong> ${number.toLocaleString('it-IT')}
+                            </div>
+                            <div class="result-item" style="background: #d4edda; color: #155724;">
+                                <strong>Risultato:</strong> ✓ È un numero primo (non fattorizzabile)
+                            </div>
+                            <div class="stats">
+                                <div class="stat-box">
+                                    <div class="stat-value">${attempts}</div>
+                                    <div class="stat-label">Tentativi</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-value">✓</div>
+                                    <div class="stat-label">Numero primo</div>
+                                </div>
+                            </div>
+                            ${stepsHTML}
+                        `;
+                    } else {
+                        resultContent.innerHTML = `<div class="error">Errore imprevisto: nessun divisore trovato ma il numero non sembra primo</div>${stepsHTML}`;
+                    }
+                } else {
+                    stepsHTML += `<div class="step">Il numero è troppo grande per una verifica completa di primalità</div>`;
+                    resultContent.innerHTML = `
+                        <div class="result-item" style="background: #fff3cd; color: #856404;">
+                            <strong>Numero:</strong> ${number.toLocaleString('it-IT')}
+                        </div>
+                        <div class="result-item" style="background: #fff3cd; color: #856404;">
+                            <strong>Risultato:</strong> Impossibile fattorizzare, probabilmente il numero è primo
+                        </div>
+                        <div class="stats">
+                            <div class="stat-box">
+                                <div class="stat-value">${attempts}</div>
+                                <div class="stat-label">Tentativi</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value">?</div>
+                                <div class="stat-label">Probabile primo</div>
+                            </div>
+                        </div>
+                        ${stepsHTML}
+                    `;
+                }
                 resultDiv.classList.remove('hidden');
                 return;
             }
